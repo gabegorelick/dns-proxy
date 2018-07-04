@@ -2,9 +2,9 @@
 Description=Transparent DNS SOCKS Proxy
 
 [Service]
-Type=forking
+Type=simple
 ExecStart=/usr/bin/dns-proxy /etc/dns-proxy/dns-proxy.conf
-ExecStop=killall dns-proxy
+User=nobody
 
 [Install]
 WantedBy=multi-user.target
