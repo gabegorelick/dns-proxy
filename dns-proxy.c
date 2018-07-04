@@ -35,19 +35,20 @@
 #include <time.h>
 #include <errno.h>
 
-int   SOCKS_PORT  = 9050;
-char *SOCKS_ADDR  = { "127.0.0.1" };
-int   LISTEN_PORT = 53;
-char *LISTEN_ADDR = { "0.0.0.0" };
+char *SOCKS_ADDR       = { "127.0.0.1" };
+int   SOCKS_PORT       = 9050;
+char *LISTEN_ADDR      = { "0.0.0.0" };
+int   LISTEN_PORT      = 53;
+char *RESOLVCONF       = "resolv.conf";
+int REWRITE_RESOLVCONF = 0; // true or false
+char *LOGFILE          = "/dev/null";
+char *USERNAME         = "nobody";
+char *GROUPNAME        = "nobody";
+FILE *LOG_FILE;        // /dev/null
 
-FILE *LOG_FILE;
-char *RESOLVCONF = "resolv.conf";
-char *LOGFILE = "/dev/null";
-char *USERNAME = "nobody";
-char *GROUPNAME = "nobody";
+
 int NUM_DNS = 0;
 int LOG = 0;
-int REWRITE_RESOLVECONF = 0;
 char **dns_servers;
 
 typedef struct {
@@ -117,7 +118,7 @@ void parse_config(char *file) {
 			for (int i = 0; value[i]; i++) {
 				value[i] = tolower(value[i]);
 			}
-			REWRITE_RESOLVECONF = strcmp(value, "true") == 0;
+			REWRITE_RESOLVCONF = strcmp(value, "true") == 0;
 
 		} else if (strstr(line, "resolv_conf") != NULL) {
 			RESOLVCONF = string_value(get_value(line));
@@ -147,8 +148,11 @@ void parse_resolv_conf() {
 	}
 
 	while (fgets(ns, 80, f) != NULL) {
-		if (!regexec(&preg, ns, 1, pmatch, 0))
+
+		if (!regexec(&preg, ns, 1, pmatch, 0)) {
 			NUM_DNS++;
+		}
+
 	}
 
 	if (fclose(f)) {
@@ -271,7 +275,7 @@ int udp_listener() {
 
 	}
 
-	if (REWRITE_RESOLVECONF) {
+	if (REWRITE_RESOLVCONF) {
 
 		FILE *resolv = fopen("/etc/resolv.conf", "w");
 		if (!resolv) {
@@ -353,43 +357,52 @@ int main(int argc, char *argv[]) {
 
 	if (argc == 1) {
 
-		parse_config("dns_proxy.conf");
+		parse_config("dns-proxy.conf");
 
 	} else if (argc == 2) {
 
 		if (!strcmp(argv[1], "-h")) {
 
 			printf("Usage: %s [options]\n", argv[0]);
-			printf(" * With no parameters, the configuration file is read from 'dns_proxy.conf'.\n\n");
-			printf(" -n          -- No configuration file (socks: 127.0.0.1:9999, listener: 0.0.0.0:53).\n");
+			printf(" * With no parameters, the configuration file is read from 'dns-proxy.conf'.\n\n");
+			printf(" -n          -- No configuration file (socks: 127.0.0.1:9050, listener: 0.0.0.0:53).\n");
 			printf(" -h          -- Print this message and exit.\n");
 			printf(" config_file -- Read from specified configuration file.\n\n");
-			printf(" * The configuration file should contain any of the following options (and ignores lines that begin with '#'):\n");
-			printf("   * socks_addr          -- socks listener address\n");
-			printf("   * socks_port          -- socks listener port\n");
-			printf("   * listen_addr         -- address for the dns proxy to listen on\n");
-			printf("   * listen_port         -- port for the dns proxy to listen on (most cases 53)\n");
-			printf("   * set_user            -- username to drop to after binding\n");
-			printf("   * set_group           -- group to drop to after binding\n");
-			printf("   * resolv_conf         -- location of resolv.conf to read from\n");
-			printf("   * rewrite_resolv_conf -- toggles whether or not to rewrite resolv.conf\n");
-			printf("   * log_file            -- location to log server IPs to. (only necessary for debugging)\n\n");
-			printf(" * Configuration directives should be of the format:\n");
-			printf("   option = value\n\n");
-			printf(" * Any non-specified options will be set to their defaults:\n");
-			printf("   * socks_addr          = 127.0.0.1\n");
-			printf("   * socks_port          = 9050\n");
-			printf("   * listen_addr         = 0.0.0.0\n");
-			printf("   * listen_port         = 53\n");
-			printf("   * set_user            = nobody\n");
-			printf("   * set_group           = nobody\n");
-			printf("   * resolv_conf         = resolv.conf\n");
-			printf("   * rewrite_resolv_conf = false\n");
-			printf("   * log_file            = /dev/null\n");
+
+			printf("Examples:\n");
+			printf(" %s -n;\n", argv[0]);
+			printf(" %s /path/to/dns-proxy.conf;\n\n", argv[0]);
+
+			printf("dns-proxy.conf file format:\n");
+			printf("#                   -- comment\n");
+			printf("socks_addr          -- socks listener address\n");
+			printf("socks_port          -- socks listener port\n");
+			printf("listen_addr         -- address for the dns proxy to listen on\n");
+			printf("listen_port         -- port for the dns proxy to listen on (most cases 53)\n");
+			printf("set_user            -- username to drop to after binding\n");
+			printf("set_group           -- group to drop to after binding\n");
+			printf("resolv_conf         -- location of resolv.conf to read from\n");
+			printf("rewrite_resolv_conf -- toggles whether or not to rewrite resolv.conf\n");
+			printf("log_file            -- location to log server IPs to. (only necessary for debugging)\n\n");
+
+			printf("dns-proxy.conf defaults:\n");
+			printf("# option = value\n\n");
+			printf("socks_addr          = 127.0.0.1\n");
+			printf("socks_port          = 9050\n");
+			printf("listen_addr         = 0.0.0.0\n");
+			printf("listen_port         = 53\n");
+			printf("set_user            = nobody\n");
+			printf("set_group           = nobody\n");
+			printf("resolv_conf         = resolv.conf\n");
+			printf("rewrite_resolv_conf = false\n");
+			printf("log_file            = /dev/null\n");
+
 			exit(0);
 
 		} else {
+
 			parse_config(argv[1]);
+
 		}
 
 	}

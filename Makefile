@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 CFLAGS ?= -Wall -Wextra
-daemon_name = dns_proxy
+daemon_name = dns-proxy
 
 all: $(daemon_name)
 
