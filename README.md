@@ -1,7 +1,8 @@
 # DNS SOCKS Proxy (dns-proxy)
 
 This is a downstream fork of [jtripper/dns-tcp-socks-proxy](https://github.com/jtripper/dns-tcp-socks-proxy)
-and tries to keep this project maintained and the package on AUR up-to-date.
+and tries to keep this project maintained and the [package on AUR](https://aur.archlinux.org/packages/dns-proxy-git)
+up-to-date.
 
 
 This simple DNS Socks Proxy allows to tunnel DNS requests via a SOCKS proxy
@@ -87,7 +88,7 @@ log_file            = /dev/null
 
 ## Installation
 
-On Arch linux, the dns proxy can be installed from the AUR at: https://aur.archlinux.org/packages/tcpdnsproxy/.
+On Arch linux, the dns proxy can be installed from the AUR at: https://aur.archlinux.org/packages/dns-proxy-git.
 
 ```
 git clone https://aur.archlinux.org/packages/dns-proxy-git;
