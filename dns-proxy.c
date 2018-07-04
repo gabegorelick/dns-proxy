@@ -97,8 +97,10 @@ void parse_config(char *file) {
 	}
 
 	while (fgets(line, 80, f) != NULL) {
-		if (line[0] == '#')
+
+		if (line[0] == '#') {
 			continue;
+		}
 
 		if (strstr(line, "socks_port") != NULL) {
 			SOCKS_PORT = strtol(get_value(line), NULL, 10);
@@ -361,10 +363,15 @@ int main(int argc, char *argv[]) {
 
 	} else if (argc == 2) {
 
-		if (!strcmp(argv[1], "-h")) {
+		if (!strcmp(argv[1], "-n")) {
+
+			// XXX: stub, do nothing
+
+		} else if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
 
 			printf("Usage: %s [options]\n", argv[0]);
-			printf(" * With no parameters, the configuration file is read from 'dns-proxy.conf'.\n\n");
+			printf("\n");
+			printf("No parameters will lead to configuration read from './dns-proxy.conf'.\n\n");
 			printf(" -n          -- No configuration file (socks: 127.0.0.1:9050, listener: 0.0.0.0:53).\n");
 			printf(" -h          -- Print this message and exit.\n");
 			printf(" config_file -- Read from specified configuration file.\n\n");
@@ -410,7 +417,7 @@ int main(int argc, char *argv[]) {
 
 	printf("[*] Listening on: %s:%d\n", LISTEN_ADDR, LISTEN_PORT);
 	printf("[*] Using SOCKS proxy: %s:%d\n", SOCKS_ADDR, SOCKS_PORT);
-	printf("[*] Will drop priviledges to %s:%s\n", USERNAME, GROUPNAME);
+	printf("[*] Will drop privileges to %s:%s\n", USERNAME, GROUPNAME);
 	parse_resolv_conf();
 	printf("[*] Loaded %d DNS servers from %s.\n\n", NUM_DNS, RESOLVCONF);
 
