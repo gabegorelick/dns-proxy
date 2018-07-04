@@ -267,7 +267,7 @@ int udp_listener() {
 		}
 
 		setvbuf(LOG_FILE, NULL, _IOLBF, 1024);
-		fprintf(LOG_FILE, "Starting up...\n");
+		fprintf(LOG_FILE, "Starting up ...\n");
 
 	}
 
@@ -284,20 +284,11 @@ int udp_listener() {
 
 	}
 
-
-	printf("[*] No errors, backgrounding process.\n");
-
-	// daemonize the process.
-	if (fork() != 0) {
-		exit(0);
+	if (geteuid() == 0) {
+		setuid(getpwnam(USERNAME)->pw_uid);
+		setgid(getgrnam(GROUPNAME)->gr_gid);
 	}
 
-	if (fork() != 0) {
-		exit(0);
-	}
-
-	setuid(getpwnam(USERNAME)->pw_uid);
-	setgid(getgrnam(GROUPNAME)->gr_gid);
 	socklen_t dns_client_size = sizeof(struct sockaddr_in);
 
 	// setup SIGCHLD handler to kill off zombie children
@@ -305,7 +296,6 @@ int udp_listener() {
 	memset(&reaper, 0, sizeof(struct sigaction));
 	reaper.sa_handler = reaper_handle;
 	sigaction(SIGCHLD, &reaper, 0);
-
 
 
 	while (1) {
@@ -328,6 +318,9 @@ int udp_listener() {
 			continue;
 
 		}
+
+		// flush before fork so messages won't be written twice
+		fflush(NULL);
 
 		// fork so we can keep receiving requests
 		if (fork() != 0) {
@@ -401,10 +394,6 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	if (getuid() != 0) {
-		printf("Error: this program must be run as root! Quitting\n");
-		exit(1);
-	}
 
 	printf("[*] Listening on: %s:%d\n", LISTEN_ADDR, LISTEN_PORT);
 	printf("[*] Using SOCKS proxy: %s:%d\n", SOCKS_ADDR, SOCKS_PORT);
