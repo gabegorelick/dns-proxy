@@ -291,8 +291,17 @@ int udp_listener() {
 	}
 
 	if (geteuid() == 0) {
-		setuid(getpwnam(USERNAME)->pw_uid);
-		setgid(getgrnam(GROUPNAME)->gr_gid);
+
+		if(setuid(getpwnam(USERNAME)->pw_uid) != 0) {
+			printf("setuid: Unable to drop to %s, %s",USERNAME,strerror(errno));
+			exit(1);
+		}
+
+		if(setgid(getgrnam(GROUPNAME)->gr_gid) != 0) {
+			printf("setgid: Unable to drop to %s, %s",GROUPNAME,strerror(errno));
+			exit(1);
+		}
+
 	}
 
 	socklen_t dns_client_size = sizeof(struct sockaddr_in);
